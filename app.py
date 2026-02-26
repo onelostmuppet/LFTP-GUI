@@ -7,6 +7,7 @@ import logging
 import os
 import pty
 import re
+import shutil
 import stat as stat_mod
 import subprocess
 import threading
@@ -245,9 +246,30 @@ class DownloadManager:
                     return True
         return False
 
+    def delete(self, item_id):
+        """Remove a cancelled item from the queue and delete its local file/directory."""
+        with self.lock:
+            for item in self.queue:
+                if item.id == item_id and item.status == "cancelled":
+                    local_path = os.path.join(LOCAL_DIR, item.name)
+                    self.queue.remove(item)
+                    self._version += 1
+                    self._save_cancelled()
+                    break
+            else:
+                return False
+        # Delete local partial file outside the lock
+        if os.path.isdir(local_path):
+            shutil.rmtree(local_path, ignore_errors=True)
+            logger.info(f"[{item_id}] Deleted local directory: {local_path}")
+        elif os.path.isfile(local_path):
+            os.remove(local_path)
+            logger.info(f"[{item_id}] Deleted local file: {local_path}")
+        return True
+
     def clear_finished(self):
         with self.lock:
-            self.queue = [i for i in self.queue if i.status in ("queued", "downloading")]
+            self.queue = [i for i in self.queue if i.status not in ("completed", "failed")]
             self._version += 1
             self._save_cancelled()
 
@@ -525,6 +547,12 @@ def cancel(item_id):
 def resume(item_id):
     ok = manager.resume(item_id)
     return jsonify({"resumed": ok})
+
+
+@app.route("/api/delete/<item_id>", methods=["POST"])
+def delete(item_id):
+    ok = manager.delete(item_id)
+    return jsonify({"deleted": ok})
 
 
 @app.route("/api/clear", methods=["POST"])

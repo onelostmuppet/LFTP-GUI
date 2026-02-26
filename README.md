@@ -50,7 +50,7 @@ Then open **http://localhost:5000** in your Windows browser.
 - **📁 Folder Mirror** — `lftp mirror --parallel=6 --continue` for directories
 - **📥 Download Queue** — Enqueue multiple items, up to 5 concurrent downloads
 - **📊 Live Progress** — Speed, percentage, and ETA via SSE (updates every 0.5s)
-- **✕ Cancel / Clear** — Cancel in-progress or queued items, clear completed
+- **✕ Cancel / Clear** — Cancel in-progress or queued items; clear completed/failed; delete cancelled items and their partial local files
 - **🔑 Auto Key Detection** — Supports Ed25519, ECDSA, RSA, and DSS key types
 - **↻ Resume** — Partial downloads resume automatically via the `-c` flag
 - **💾 Persistent Cancelled Downloads** — Cancelled downloads are saved to `state.json` and restored on server restart so they can be resumed later

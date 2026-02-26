@@ -9,6 +9,7 @@ const API = {
     }).then(r => r.json()),
     cancel: (id) => fetch(`/api/cancel/${id}`, { method: 'POST' }).then(r => r.json()),
     resume: (id) => fetch(`/api/resume/${id}`, { method: 'POST' }).then(r => r.json()),
+    delete: (id) => fetch(`/api/delete/${id}`, { method: 'POST' }).then(r => r.json()),
     clear: () => fetch('/api/clear', { method: 'POST' }).then(r => r.json()),
 };
 
@@ -327,6 +328,7 @@ function renderQueue() {
                 ${item.status === 'cancelled' ? `
                     <div class="queue-item-actions">
                         <button class="btn btn-primary btn-sm" onclick="resumeItem('${item.id}')">▶ Resume</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteItem('${item.id}')">🗑 Delete</button>
                     </div>` : ''}
             </div>`;
     }).join('');
@@ -338,6 +340,10 @@ async function cancelItem(id) {
 
 async function resumeItem(id) {
     await API.resume(id);
+}
+
+async function deleteItem(id) {
+    await API.delete(id);
 }
 
 async function clearFinished() {

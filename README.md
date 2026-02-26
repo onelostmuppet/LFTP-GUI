@@ -111,4 +111,18 @@ lftp -c "set sftp:connect-program 'ssh -a -x -i ~/.ssh/your_key'; set sftp:auto-
 - **Search / Filter** — Filter files by name within the current directory
 - **Download History** — Persist completed download history across app restarts
 - **Notifications** — Browser notification when a download completes
-- **Auth** — Add basic auth if exposing beyond localhost
+
+---
+
+## Roadmap
+
+### Infrastructure
+- **Migrate from WSL to DietPi (Debian)** — Move the server off WSL onto a dedicated DietPi instance for always-on operation, better resource isolation, and proper service management via systemd
+- **NGINX reverse proxy** — Sit NGINX in front of Flask to handle SSL termination, serve static assets efficiently, and provide a clean entry point for external access
+
+### Remote Access
+- **Cloudflare Argo Tunnel** — Expose the GUI securely to the internet without opening firewall ports, using a Cloudflare tunnel pointed at the local NGINX instance
+- **Cloudflare Access with Entra ID (free tier)** — Gate the tunnel behind Cloudflare Access, using Microsoft Entra ID (formerly Azure AD free tier) as the identity provider for SSO login
+
+### Authentication
+- **TOTP / MFA** — Add time-based one-time password support as a second factor, either via Cloudflare Access policies or a lightweight in-app auth layer

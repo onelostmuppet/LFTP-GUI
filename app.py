@@ -317,8 +317,10 @@ class DownloadManager:
             # Ensure local directory exists
             os.makedirs(LOCAL_DIR, exist_ok=True)
 
+            local_dest = os.path.join(LOCAL_DIR, item.name)
+            initial_size_bytes = _get_local_size(local_dest)
+
             if item.is_dir:
-                local_dest = os.path.join(LOCAL_DIR, item.name)
                 lftp_commands = (
                     lftp_base_settings +
                     f"open {_lftp_quote(sftp_root_url + item.remote_path)}; "
@@ -403,9 +405,10 @@ class DownloadManager:
                     duration_s = time.time() - start_time
                     local_dest = os.path.join(LOCAL_DIR, item.name)
                     size_bytes = _get_local_size(local_dest)
+                    downloaded_bytes = max(0, size_bytes - initial_size_bytes)
                     
                     if duration_s > 0:
-                        speed_mbps = (size_bytes / duration_s) / (1024 * 1024)
+                        speed_mbps = (downloaded_bytes / duration_s) / (1024 * 1024)
                     else:
                         speed_mbps = 0.0
                         

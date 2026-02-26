@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seedbox LFTP-GUI</title>
+    <meta name="description" content="Web GUI for downloading files from seedbox via LFTP">
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⬇️</text></svg>">
+</head>
+
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="header-logo">⬇</div>
+                <h1>LFTP <span>Seedbox Download GUI</span></h1>
+            </div>
+            <div class="header-status">
+                <span class="status-dot"></span>
+                <span>boxofseeds@5.79.112.170</span>
+            </div>
+        </header>
+
+        <!-- Main content -->
+        <div class="main">
+            <!-- File Browser Panel -->
+            <div class="panel browser-panel">
+                <div class="panel-header">
+                    <span class="panel-title">📂 Seedbox Files</span>
+                    <button class="btn btn-sm" onclick="browseTo(currentPath)">↻ Refresh</button>
+                </div>
+                <div class="breadcrumbs" id="breadcrumbs"></div>
+                <div class="panel-body" id="file-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Connecting…</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Queue Panel -->
+            <div class="panel queue-panel">
+                <div class="panel-header">
+                    <span class="panel-title">📥 Downloads <span id="queue-count"></span></span>
+                    <span class="queue-stats" id="queue-stats"></span>
+                    <button class="btn btn-sm" id="btn-clear" style="display:none">Clear finished</button>
+                </div>
+                <div class="panel-body" id="queue-list">
+                    <div class="queue-empty">
+                        <div class="queue-empty-icon">📥</div>
+                        <p>No downloads yet.<br>Browse files and click download to get started.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Viewer -->
+        <div class="panel log-panel">
+            <div class="panel-header" onclick="toggleLogs()" style="cursor:pointer">
+                <span class="panel-title">📋 Logs</span>
+                <div style="display:flex; gap:0.5rem; align-items:center">
+                    <button class="btn btn-sm" id="btn-refresh-logs" onclick="event.stopPropagation(); fetchLogs()">↻
+                        Refresh</button>
+                    <span class="log-toggle" id="log-toggle">▶</span>
+                </div>
+            </div>
+            <div class="log-body" id="log-body" style="display:none">
+                <pre class="log-content" id="log-content">Click refresh to load logs…</pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

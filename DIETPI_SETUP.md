@@ -25,16 +25,19 @@ Adapted from the ABS DietPi HTTPS setup (`ABS DietPi/Dietpi ABS https setup & se
 The existing `dietpi` host entry connects as **root**. Add a second entry to connect as **dietpi** user:
 
 ```
-Host dietpi
+Host dietpi-root
     HostName 192.168.1.100
     User root
-    IdentityFile ~/.ssh/dietpi_key
+    IdentityFile ~/.ssh/dietpi_root_key
     IdentitiesOnly yes
+    ControlMaster auto
+    ControlPath ~/.ssh/control-%r@%h:%p
+    ControlPersist 10m
 
 Host dietpi-user
     HostName 192.168.1.100
     User dietpi
-    IdentityFile ~/.ssh/dietpi_key
+    IdentityFile ~/.ssh/dietpi_user_key
     IdentitiesOnly yes
 
 Host boxofseeds
@@ -81,10 +84,10 @@ Copy it from WSL to the DietPi's `dietpi` user:
 
 ```bash
 # From WSL — copy key to DietPi
-scp ~/.ssh/seedhost_key_lftp_1 root@192.168.1.100:/home/dietpi/.ssh/seedhost_key_lftp_1
+scp ~/.ssh/seedhost_key_lftp_1 dietpi-root:/home/dietpi/.ssh/seedhost_key_lftp_1
 
 # Set correct ownership and permissions on DietPi
-ssh dietpi "chown dietpi:dietpi /home/dietpi/.ssh/seedhost_key_lftp_1 && chmod 600 /home/dietpi/.ssh/seedhost_key_lftp_1"
+ssh dietpi-root "chown dietpi:dietpi /home/dietpi/.ssh/seedhost_key_lftp_1 && chmod 600 /home/dietpi/.ssh/seedhost_key_lftp_1"
 
 # Verify
 ssh dietpi-user "ls -la ~/.ssh/seedhost_key_lftp_1"
@@ -97,7 +100,7 @@ ssh dietpi-user "ls -la ~/.ssh/seedhost_key_lftp_1"
 
 SSH into DietPi as root:
 ```bash
-ssh dietpi
+ssh dietpi-root
 ```
 
 Install required packages:

@@ -64,7 +64,7 @@ logging.getLogger("paramiko").setLevel(logging.WARNING)
 logging.getLogger("werkzeug").setLevel(logging.INFO)
 
 # ── Configuration ────────────────────────────────────────────────────────────
-from config import SFTP_HOST, SFTP_PORT, SFTP_USER, SFTP_KEY, REMOTE_ROOT, LOCAL_DIR, THREADS, MAX_CONCURRENT_DOWNLOADS
+from config import SFTP_HOST, SFTP_PORT, SFTP_USER, SFTP_KEY, REMOTE_ROOT, LOCAL_DIR, THREADS, MAX_CONCURRENT_DOWNLOADS, APP_PORT
 import config as _config
 DOWNLOAD_MAPPINGS = getattr(_config, "DOWNLOAD_MAPPINGS", [])
 
@@ -615,4 +615,4 @@ if __name__ == "__main__":
     logger.info(f"  Threads: {THREADS}")
     logger.info(f"  Log file: {LOG_FILE}")
     logger.info("═" * 50)
-    app.run(host="0.0.0.0", port=57423, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=APP_PORT, debug=False, threaded=True)

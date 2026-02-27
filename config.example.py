@@ -8,6 +8,7 @@ REMOTE_ROOT = "/homeXX/your_username/downloads/rtorrent"
 LOCAL_DIR = "/mnt/NAS/downloads"  # fallback if no DOWNLOAD_MAPPINGS rule matches
 THREADS = 6
 MAX_CONCURRENT_DOWNLOADS = 5
+APP_PORT = 5000
 
 # DOWNLOAD_MAPPINGS: list of (regex_pattern, local_destination) tuples.
 # Patterns are matched case-insensitively against the full remote path.

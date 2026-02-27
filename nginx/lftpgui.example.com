@@ -20,7 +20,7 @@ server {
     }
 }
 
-# ── HTTPS: proxy to Flask app on port 57423 ──────────────────────────────────
+# ── HTTPS: proxy to Flask app on port YOUR_PORT ──────────────────────────────────
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
@@ -38,9 +38,13 @@ server {
     add_header X-Content-Type-Options    nosniff                                always;
     add_header Referrer-Policy           "strict-origin-when-cross-origin"      always;
 
+    # ── Basic authentication ───────────────────────────────────────────────────
+    auth_basic           "LFTP-GUI";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
     # ── Standard proxy ────────────────────────────────────────────────────────
     location / {
-        proxy_pass         http://127.0.0.1:57423;
+        proxy_pass         http://127.0.0.1:YOUR_PORT;
         proxy_http_version 1.1;
 
         proxy_set_header   Host              $host;
@@ -57,7 +61,7 @@ server {
     # Server-Sent Events requires buffering off so updates stream in real time.
     # The connection stays open indefinitely while the app is running.
     location /api/queue {
-        proxy_pass         http://127.0.0.1:57423;
+        proxy_pass         http://127.0.0.1:YOUR_PORT;
         proxy_http_version 1.1;
 
         proxy_set_header   Host              $host;

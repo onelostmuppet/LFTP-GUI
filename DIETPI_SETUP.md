@@ -229,6 +229,24 @@ ln -s /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN \
 
 ---
 
+## 7a. Basic Authentication (htpasswd)
+
+The nginx config requires a password file at `/etc/nginx/.htpasswd`. Create it before nginx is reloaded in step 8.
+
+```bash
+# Install apache2-utils if not already present
+apt-get install -y apache2-utils
+
+# Create the file and add a user (-c creates the file)
+htpasswd -c /etc/nginx/.htpasswd YOUR_USERNAME
+# Enter and confirm a password when prompted
+
+# To add more users later (omit -c to avoid overwriting):
+# htpasswd /etc/nginx/.htpasswd ANOTHER_USER
+```
+
+---
+
 ## 8. SSL Certificate via Certbot
 
 DNS must be propagated before this step (verify with `nslookup lftpgui.example.com`).
@@ -271,13 +289,16 @@ certbot renew --dry-run
 
 ```bash
 # App is listening on the correct port
-ss -tlnp | grep 57423
+ss -tlnp | grep YOUR_PORT
 
 # Local access works
-curl -I http://127.0.0.1:57423
+curl -I http://127.0.0.1:YOUR_PORT
 
-# HTTPS access works (run from any machine)
-curl -I https://lftpgui.YOUR_DOMAIN   # expect HTTP/2 200
+# HTTPS access works — unauthenticated request should return 401
+curl -I https://lftpgui.YOUR_DOMAIN   # expect HTTP/2 401 WWW-Authenticate: Basic realm="LFTP-GUI"
+
+# Authenticated request should return 200
+curl -u YOUR_USERNAME:YOUR_PASSWORD -I https://lftpgui.YOUR_DOMAIN   # expect HTTP/2 200
 
 # Check nginx logs
 tail -f /var/log/nginx/access.log
@@ -372,8 +393,8 @@ nginx -t
 tail -f /var/log/nginx/error.log
 
 # Can't reach the domain
-ss -tlnp | grep 57423                 # verify app is listening
-curl -I http://127.0.0.1:57423        # test app directly
+ss -tlnp | grep YOUR_PORT                 # verify app is listening
+curl -I http://127.0.0.1:YOUR_PORT        # test app directly
 curl -I https://lftpgui.YOUR_DOMAIN   # test full path
 certbot certificates                  # verify cert isn't expired
 
@@ -399,9 +420,10 @@ A  lftpgui         → YOUR_PUBLIC_IP
 ```
 
 ### Security Model
-- LFTP-GUI Flask app is bound to `127.0.0.1:57423` (localhost only)
+- LFTP-GUI Flask app is bound to `127.0.0.1:YOUR_PORT` (localhost only)
 - All external access goes through nginx on port 443 (HTTPS)
-- No direct port 57423 access from LAN or internet
+- No direct port YOUR_PORT access from LAN or internet
+- HTTP basic auth required for all routes (credentials stored in `/etc/nginx/.htpasswd`)
 - SSH key for seedbox is passwordless (required for background LFTP operations)
 
 ---

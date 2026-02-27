@@ -59,18 +59,6 @@ All downloads are saved to `/mnt/c/your_user/Downloads` (your Windows Downloads 
 
 ---
 
-## Roadmap
-- **Cloudflare Argo Tunnel** — Expose the GUI securely to the internet without opening firewall ports, using a Cloudflare tunnel pointed at the local NGINX instance
-- **Cloudflare Access with Entra ID (free tier)** — Gate the tunnel behind Cloudflare Access, using Microsoft Entra ID (formerly Azure AD free tier) as the identity provider for SSO login
-- **TOTP / MFA** — Add time-based one-time password support as a second factor, either via Cloudflare Access policies or a lightweight in-app auth layer
-- **Connection Pooling** — Paramiko currently opens a fresh SSH transport per browse request; pooling would speed up rapid directory navigation
-- **File Size Totals** — Show total size for directories before downloading
-- **Search / Filter** — Filter files by name within the current directory
-- **Download History** — Persist completed download history across app restarts
-- **Notifications** — Browser notification when a download completes
-
----
-
 ## Configuration
 
 Copy `config.example.py` to `config.py` and fill in your details:

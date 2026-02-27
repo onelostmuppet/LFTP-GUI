@@ -1,0 +1,25 @@
+[Unit]
+Description=LFTP GUI — Flask download manager
+After=network.target
+
+[Service]
+Type=simple
+User=dietpi
+Group=dietpi
+WorkingDirectory=/mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+
+# Set HOME explicitly so Paramiko and SSH resolve ~/.ssh paths correctly
+Environment=HOME=/home/dietpi
+
+ExecStart=/mnt/256GBUSB3/dietpi_userdata/LFTP-GUI/venv/bin/python3 app.py
+
+Restart=always
+RestartSec=5
+
+# Write stdout/stderr to the systemd journal
+# View with: journalctl -u lftp-gui -f
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

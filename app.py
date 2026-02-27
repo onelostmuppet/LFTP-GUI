@@ -65,6 +65,8 @@ logging.getLogger("werkzeug").setLevel(logging.INFO)
 
 # ── Configuration ────────────────────────────────────────────────────────────
 from config import SFTP_HOST, SFTP_PORT, SFTP_USER, SFTP_KEY, REMOTE_ROOT, LOCAL_DIR, THREADS, MAX_CONCURRENT_DOWNLOADS
+import config as _config
+DOWNLOAD_MAPPINGS = getattr(_config, "DOWNLOAD_MAPPINGS", [])
 
 app = Flask(__name__)
 
@@ -126,6 +128,16 @@ def _format_duration(seconds):
     elif m > 0:
         return f"{m}m {s}s"
     return f"{s}s"
+
+
+def get_local_dir(remote_path: str) -> str:
+    """Return local destination dir by matching remote_path against DOWNLOAD_MAPPINGS.
+    Falls back to LOCAL_DIR if nothing matches."""
+    for pattern, target_dir in DOWNLOAD_MAPPINGS:
+        if re.search(pattern, remote_path, re.IGNORECASE):
+            logger.debug(f"Mapped '{remote_path}' → '{target_dir}' (pattern: {pattern})")
+            return target_dir
+    return LOCAL_DIR
 
 
 # ── Persistent state helpers ─────────────────────────────────────────────────
@@ -251,7 +263,7 @@ class DownloadManager:
         with self.lock:
             for item in self.queue:
                 if item.id == item_id and item.status == "cancelled":
-                    local_path = os.path.join(LOCAL_DIR, item.name)
+                    local_path = os.path.join(get_local_dir(item.remote_path), item.name)
                     self.queue.remove(item)
                     self._version += 1
                     self._save_cancelled()
@@ -314,10 +326,11 @@ class DownloadManager:
                 # f"debug 9; " # Uncomment for low-level connection debugging
             )
 
-            # Ensure local directory exists
-            os.makedirs(LOCAL_DIR, exist_ok=True)
+            # Resolve destination directory via mapping, then ensure it exists
+            item_local_dir = get_local_dir(item.remote_path)
+            os.makedirs(item_local_dir, exist_ok=True)
 
-            local_dest = os.path.join(LOCAL_DIR, item.name)
+            local_dest = os.path.join(item_local_dir, item.name)
             initial_size_bytes = _get_local_size(local_dest)
 
             if item.is_dir:
@@ -332,7 +345,7 @@ class DownloadManager:
                     f"set xfer:clobber on; "
                     f"open {_lftp_quote(sftp_root_url)}; "
                     f"cd {_lftp_quote(os.path.dirname(item.remote_path))}; "
-                    f"pget -c -n {THREADS} -O {_lftp_quote(LOCAL_DIR)} {_lftp_quote(os.path.basename(item.remote_path))}"
+                    f"pget -c -n {THREADS} -O {_lftp_quote(item_local_dir)} {_lftp_quote(os.path.basename(item.remote_path))}"
                 )
 
             logger.info(f"[{item.id}] Starting download: {item.name}")
@@ -403,7 +416,7 @@ class DownloadManager:
                     item.percent = 100
                     
                     duration_s = time.time() - start_time
-                    local_dest = os.path.join(LOCAL_DIR, item.name)
+                    local_dest = os.path.join(item_local_dir, item.name)
                     size_bytes = _get_local_size(local_dest)
                     downloaded_bytes = max(0, size_bytes - initial_size_bytes)
                     
@@ -591,12 +604,15 @@ def logs():
 # ── Entry point ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    os.makedirs(LOCAL_DIR, exist_ok=True)
     logger.info("═" * 50)
     logger.info("LFTP Download GUI starting")
     logger.info(f"  Remote: {SFTP_USER}@{SFTP_HOST}:{REMOTE_ROOT}")
-    logger.info(f"  Local:  {LOCAL_DIR}")
+    logger.info(f"  Fallback local dir: {LOCAL_DIR}")
+    if DOWNLOAD_MAPPINGS:
+        logger.info(f"  Download mappings active: {len(DOWNLOAD_MAPPINGS)} rule(s)")
+        for pattern, target in DOWNLOAD_MAPPINGS:
+            logger.info(f"    /{pattern}/ → {target}")
     logger.info(f"  Threads: {THREADS}")
     logger.info(f"  Log file: {LOG_FILE}")
     logger.info("═" * 50)
-    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
+    app.run(host="0.0.0.0", port=57423, debug=False, threaded=True)

@@ -6,12 +6,12 @@ After=network.target
 Type=simple
 User=dietpi
 Group=dietpi
-WorkingDirectory=/mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+WorkingDirectory=/path/to/lftp-gui
 
 # Set HOME explicitly so Paramiko and SSH resolve ~/.ssh paths correctly
 Environment=HOME=/home/dietpi
 
-ExecStart=/mnt/256GBUSB3/dietpi_userdata/LFTP-GUI/venv/bin/python3 app.py
+ExecStart=/path/to/lftp-gui/venv/bin/python3 app.py
 
 Restart=always
 RestartSec=5

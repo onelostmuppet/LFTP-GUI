@@ -482,7 +482,7 @@ manager = DownloadManager()
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template("index.html", sftp_user=SFTP_USER, sftp_host=SFTP_HOST)
 
 
 @app.route("/api/browse")

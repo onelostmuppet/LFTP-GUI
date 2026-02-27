@@ -1,13 +1,14 @@
-# LFTP-GUI — https://lftpgui.brynley.au
+# LFTP-GUI — https://lftpgui.example.com
 # Nginx reverse proxy config
-# Install: copy to /etc/nginx/sites-available/lftpgui.brynley.au
-#          ln -s /etc/nginx/sites-available/lftpgui.brynley.au /etc/nginx/sites-enabled/
+# Install: copy to /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN
+#          edit server_name and certificate paths to match your domain
+#          ln -s /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN /etc/nginx/sites-enabled/
 
 # ── HTTP: redirect to HTTPS + allow certbot ACME challenge ───────────────────
 server {
     listen 80;
     listen [::]:80;
-    server_name lftpgui.brynley.au;
+    server_name lftpgui.example.com;
 
     # Allow certbot ACME challenge through before redirecting
     location /.well-known/acme-challenge/ {
@@ -24,10 +25,10 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     http2 on;
-    server_name lftpgui.brynley.au;
+    server_name lftpgui.example.com;
 
-    ssl_certificate     /etc/letsencrypt/live/lftpgui.brynley.au/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/lftpgui.brynley.au/privkey.pem;
+    ssl_certificate     /etc/letsencrypt/live/lftpgui.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/lftpgui.example.com/privkey.pem;
     include             /etc/letsencrypt/options-ssl-nginx.conf;
     ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
 

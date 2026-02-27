@@ -67,9 +67,15 @@ cover/
 *.log
 test_js.py
 
-# Secrets and identifiable information — use example-config.md as a template
+# Secrets and identifiable information — use config.example.py as a template
 config.py
 LFTP_Cheatsheet.md
+
+# Site-specific nginx config — use nginx/lftpgui.example.com as a template
+nginx/lftpgui.brynley.au
+
+# Backup files
+*.bak
 
 # Runtime state (contains last browsed remote path)
 state.json

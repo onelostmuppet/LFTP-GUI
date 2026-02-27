@@ -1,6 +1,6 @@
 # LFTP-GUI DietPi Setup Guide
 
-Setup guide for running LFTP-GUI on DietPi at `https://lftpgui.brynley.au`.
+Setup guide for running LFTP-GUI on DietPi at `https://lftpgui.example.com`.
 
 Adapted from the ABS DietPi HTTPS setup (`ABS DietPi/Dietpi ABS https setup & seedbox audiobook sync.md`).
 
@@ -10,13 +10,13 @@ Adapted from the ABS DietPi HTTPS setup (`ABS DietPi/Dietpi ABS https setup & se
 
 | Item | Value |
 |---|---|
-| DietPi LAN IP | 192.168.1.100 |
-| Public IP | 115.69.2.169 |
-| Router port 80 → | 192.168.1.100:80 |
-| Router port 443 → | 192.168.1.100:443 |
+| DietPi LAN IP | YOUR_DIETPI_IP |
+| Public IP | YOUR_PUBLIC_IP |
+| Router port 80 → | YOUR_DIETPI_IP:80 |
+| Router port 443 → | YOUR_DIETPI_IP:443 |
 | Nginx | Installed |
 | Certbot | Installed |
-| Existing nginx site | `audiobookshelf` (abs.brynley.au) |
+| Existing nginx site | `audiobookshelf` (audiobookshelf.example.com) |
 
 ---
 
@@ -26,7 +26,7 @@ The existing `dietpi` host entry connects as **root**. Add a second entry to con
 
 ```
 Host dietpi-root
-    HostName 192.168.1.100
+    HostName YOUR_DIETPI_IP
     User root
     IdentityFile ~/.ssh/dietpi_root_key
     IdentitiesOnly yes
@@ -35,16 +35,16 @@ Host dietpi-root
     ControlPersist 10m
 
 Host dietpi-user
-    HostName 192.168.1.100
+    HostName YOUR_DIETPI_IP
     User dietpi
     IdentityFile ~/.ssh/dietpi_user_key
     IdentitiesOnly yes
 
-Host boxofseeds
-    HostName horn.seedhost.eu
+Host seedbox
+    HostName YOUR_SEEDBOX_HOST
     Port 22
-    User boxofseeds
-    IdentityFile ~/.ssh/brynley_key
+    User YOUR_SEEDBOX_USER
+    IdentityFile ~/.ssh/YOUR_SEEDBOX_KEY
     IdentitiesOnly yes
     ControlMaster auto
     ControlPath ~/.ssh/control-%r@%h:%p
@@ -60,43 +60,43 @@ ssh dietpi-user "whoami"   # should print: dietpi
 
 ## 1. DNS Record
 
-At **iwantmyname.com**, add a second A record alongside the existing `abs` entry:
+At your DNS provider, add an A record:
 
 ```
 Type:      A
 Subdomain: lftpgui
-IP:        115.69.2.169
-Domain:    brynley.au
-Result:    lftpgui.brynley.au
+IP:        YOUR_PUBLIC_IP
+Domain:    example.com
+Result:    lftpgui.example.com
 ```
 
 Allow up to 30 minutes for propagation. Verify:
 ```bash
-nslookup lftpgui.brynley.au   # should return 115.69.2.169
+nslookup lftpgui.example.com   # should return YOUR_PUBLIC_IP
 ```
 
 ---
 
 ## 2. Copy Seedbox SSH Key to DietPi
 
-The app authenticates to the seedbox using `seedhost_key_lftp_1`.
+The app authenticates to the seedbox using `YOUR_SEEDBOX_KEY`.
 Copy it from WSL to the DietPi's `dietpi` user:
 
 ```bash
 # From WSL — copy key to DietPi
-scp ~/.ssh/seedhost_key_lftp_1 dietpi-root:/home/dietpi/.ssh/seedhost_key_lftp_1
+scp ~/.ssh/YOUR_SEEDBOX_KEY dietpi-root:/home/dietpi/.ssh/YOUR_SEEDBOX_KEY
 
 # Set correct ownership and permissions on DietPi
-ssh dietpi-root "chown dietpi:dietpi /home/dietpi/.ssh/seedhost_key_lftp_1 && chmod 600 /home/dietpi/.ssh/seedhost_key_lftp_1"
+ssh dietpi-root "chown dietpi:dietpi /home/dietpi/.ssh/YOUR_SEEDBOX_KEY && chmod 600 /home/dietpi/.ssh/YOUR_SEEDBOX_KEY"
 
 # Verify
-ssh dietpi-user "ls -la ~/.ssh/seedhost_key_lftp_1"
+ssh dietpi-user "ls -la ~/.ssh/YOUR_SEEDBOX_KEY"
 # Expected: -rw------- 1 dietpi dietpi ...
 ```
 
 ---
 
-## 3. Install lftp and Python on DietPi
+## 3. Install git, lftp and Python on DietPi
 
 SSH into DietPi as root:
 ```bash
@@ -106,11 +106,14 @@ ssh dietpi-root
 Install required packages:
 ```bash
 apt-get update
-apt-get install -y lftp python3 python3-venv python3-pip
+apt-get install -y git lftp python3 python3-venv python3-pip
 ```
 
-Verify lftp is available:
+Verify the packages are available:
 ```bash
+which git        # /usr/bin/git
+git --version
+
 which lftp       # /usr/bin/lftp
 lftp --version
 ```
@@ -120,14 +123,14 @@ lftp --version
 ## 4. Clone Repo and Set Up Virtual Environment
 
 ```bash
-# Ensure USB drive is mounted
-ls /mnt/256GBUSB3/dietpi_userdata/
+# Ensure the target directory exists (e.g. USB drive mount or /opt)
+ls /path/to/
 
 # Clone the repository (dietpi branch)
 git clone https://github.com/onelostmuppet/LFTP-GUI.git \
-    /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+    /path/to/lftp-gui
 
-cd /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+cd /path/to/lftp-gui
 
 # Switch to the DietPi branch
 git checkout dietpi
@@ -138,7 +141,7 @@ venv/bin/pip install --upgrade pip
 venv/bin/pip install -r requirements.txt
 
 # Give dietpi user ownership of the whole directory
-chown -R dietpi:dietpi /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+chown -R dietpi:dietpi /path/to/lftp-gui
 ```
 
 ---
@@ -146,9 +149,9 @@ chown -R dietpi:dietpi /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
 ## 5. Configure the App
 
 ```bash
-cd /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+cd /path/to/lftp-gui
 
-# Create config.py from the DietPi template
+# Create config.py from the example template
 cp config.example.py config.py
 
 # Edit and verify all values
@@ -156,15 +159,15 @@ nano config.py
 ```
 
 Key values to check in `config.py`:
-- `SFTP_HOST` — seedbox IP
+- `SFTP_HOST` — seedbox IP or hostname
 - `SFTP_USER` — seedbox username
-- `SFTP_KEY` — `/home/dietpi/.ssh/seedhost_key_lftp_1`
+- `SFTP_KEY` — `/home/dietpi/.ssh/YOUR_SEEDBOX_KEY`
 - `REMOTE_ROOT` — remote downloads path on seedbox
 - `DOWNLOAD_MAPPINGS` — regex rules for routing to NAS folders
 
 Test the config by running the app manually as `dietpi` user before enabling the service:
 ```bash
-su - dietpi -s /bin/bash -c "cd /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI && venv/bin/python3 app.py"
+su - dietpi -s /bin/bash -c "cd /path/to/lftp-gui && venv/bin/python3 app.py"
 # Look for "LFTP Download GUI starting" in output
 # Press Ctrl+C after confirming it starts without errors
 ```
@@ -173,9 +176,12 @@ su - dietpi -s /bin/bash -c "cd /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI && venv/
 
 ## 6. Systemd Service (autostart + autorestart)
 
+Edit `lftp-gui.service` and replace `/path/to/lftp-gui` with your actual install path,
+then copy it to systemd:
+
 ```bash
 # Copy service file
-cp /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI/lftp-gui.service /etc/systemd/system/
+cp /path/to/lftp-gui/lftp-gui.service /etc/systemd/system/
 
 # Reload systemd, enable on boot, and start now
 systemctl daemon-reload
@@ -194,37 +200,62 @@ journalctl -u lftp-gui -f
 ## 7. Nginx Site Configuration
 
 ```bash
-# Copy site config
-cp /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI/nginx/lftpgui.brynley.au \
-   /etc/nginx/sites-available/lftpgui.brynley.au
+# Copy and customise the nginx template
+cp /path/to/lftp-gui/nginx/lftpgui.example.com \
+   /etc/nginx/sites-available/lftpgui.example.com
+
+# Replace example.com with your actual domain in the config
+sed -i 's/lftpgui\.example\.com/lftpgui.YOUR_DOMAIN/g' \
+    /etc/nginx/sites-available/lftpgui.example.com
+
+# Rename the file to match your domain
+mv /etc/nginx/sites-available/lftpgui.example.com \
+   /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN
 
 # Enable the site
-ln -s /etc/nginx/sites-available/lftpgui.brynley.au \
-      /etc/nginx/sites-enabled/lftpgui.brynley.au
-
-# Test config syntax — must pass before proceeding
-nginx -t
+ln -s /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN \
+      /etc/nginx/sites-enabled/lftpgui.YOUR_DOMAIN
 ```
 
 **Do not reload nginx yet** — the SSL certificate doesn't exist yet (step 8).
+
+> **HTTP/2 note:** The template uses the `http2 on;` standalone directive (requires nginx ≥ 1.25.1).
+> Do **not** use the older `listen 443 ssl http2;` syntax — it is deprecated and will generate warnings.
+> Verify your version with `nginx -v`.
 
 ---
 
 ## 8. SSL Certificate via Certbot
 
-DNS must be propagated before this step (verify with `nslookup lftpgui.brynley.au`).
+DNS must be propagated before this step (verify with `nslookup lftpgui.example.com`).
+
+> **Bootstrap problem:** The nginx config references the cert before it exists, so
+> `nginx -t` fails, which blocks `certbot --nginx`. Work around this by temporarily
+> stripping the config down to the HTTP-only block to let nginx start, then using
+> the webroot challenge.
 
 ```bash
-# Obtain certificate (reuses the existing certbot account from ABS setup)
-certbot certonly --nginx -d lftpgui.brynley.au
-```
+# 1. Back up the full config and replace it with HTTP-only (lines 1–20)
+cp /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN \
+   /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN.bak
+sed -n '1,20p' /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN.bak \
+   > /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN
 
-Once the certificate is issued, reload nginx to activate HTTPS:
-```bash
+# 2. Start nginx with the HTTP-only config
+nginx -t && systemctl reload nginx
+
+# 3. Obtain the certificate via webroot challenge
+certbot certonly --webroot -w /var/www/html -d lftpgui.YOUR_DOMAIN
+
+# 4. Restore the full config
+cp /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN.bak \
+   /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN
+
+# 5. Reload nginx with full HTTPS + HTTP/2 config
 nginx -t && systemctl reload nginx
 ```
 
-Verify auto-renewal timer is still active (shared with ABS cert):
+Verify auto-renewal timer is still active:
 ```bash
 systemctl status certbot.timer
 certbot renew --dry-run
@@ -242,7 +273,7 @@ ss -tlnp | grep 57423
 curl -I http://127.0.0.1:57423
 
 # HTTPS access works (run from any machine)
-curl -I https://lftpgui.brynley.au   # expect HTTP/2 200
+curl -I https://lftpgui.YOUR_DOMAIN   # expect HTTP/2 200
 
 # Check nginx logs
 tail -f /var/log/nginx/access.log
@@ -253,11 +284,11 @@ journalctl -u lftp-gui -f
 ```
 
 In the browser:
-1. Open `https://lftpgui.brynley.au`
+1. Open `https://lftpgui.YOUR_DOMAIN`
 2. File browser should load and show seedbox directories
-3. Queue a download from `#tv` — confirm file lands in `/mnt/BRAT6TB/#newtv`
+3. Queue a test download and confirm the file lands in the expected NAS folder
 4. Check `journalctl -u lftp-gui` for the mapping log line:
-   `Mapped '.../...#tv...' → '/mnt/BRAT6TB/#newtv' (pattern: #?tv)`
+   `Mapped '.../...#tv...' → '/mnt/NAS/tv' (pattern: #?tv)`
 
 Reboot test:
 ```bash
@@ -274,12 +305,12 @@ The app routes downloads to NAS subfolders based on the remote path. Rules (firs
 
 | Remote path contains | Downloads to |
 |---|---|
-| `#movies` or `movies` | `/mnt/BRAT6TB/#newmovies` |
-| `#tv` or `tv` | `/mnt/BRAT6TB/#newtv` |
-| `games` | `/mnt/BRAT6TB/Games` |
-| `#audiobooks` or `audiobooks` | `/mnt/BRAT6TB/audiobooks` |
-| `#sport` or `sports` | `/mnt/BRAT6TB/#sport` |
-| *(no match)* | `/mnt/BRAT6TB/downloads` (fallback) |
+| `#movies` or `movies` | `/mnt/NAS/movies` |
+| `#tv` or `tv` | `/mnt/NAS/tv` |
+| `#games` or `games` | `/mnt/NAS/games` |
+| `#audiobooks` or `audiobooks` | `/mnt/NAS/audiobooks` |
+| `#sport` or `sports` | `/mnt/NAS/sport` |
+| *(no match)* | `/mnt/NAS/downloads` (fallback) |
 
 To adjust rules, edit `DOWNLOAD_MAPPINGS` in `config.py` (regex, case-insensitive).
 
@@ -298,7 +329,7 @@ journalctl -u lftp-gui --since "1 hour ago"  # recent logs
 
 ### App Updates
 ```bash
-cd /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI
+cd /path/to/lftp-gui
 git pull origin dietpi
 systemctl restart lftp-gui
 ```
@@ -310,7 +341,7 @@ systemctl reload nginx                # reload without downtime
 systemctl restart nginx
 systemctl status nginx
 tail -f /var/log/nginx/error.log
-nano /etc/nginx/sites-available/lftpgui.brynley.au
+nano /etc/nginx/sites-available/lftpgui.YOUR_DOMAIN
 ```
 
 ### SSL Certificates
@@ -326,16 +357,16 @@ systemctl status certbot.timer        # check auto-renewal timer
 ```bash
 # App not starting
 journalctl -u lftp-gui -xe            # full error details
-su - dietpi -s /bin/bash -c "cd /mnt/256GBUSB3/dietpi_userdata/LFTP-GUI && venv/bin/python3 app.py"
+su - dietpi -s /bin/bash -c "cd /path/to/lftp-gui && venv/bin/python3 app.py"
 
 # Nginx config error
 nginx -t
 tail -f /var/log/nginx/error.log
 
-# Can't reach lftpgui.brynley.au
+# Can't reach the domain
 ss -tlnp | grep 57423                 # verify app is listening
 curl -I http://127.0.0.1:57423        # test app directly
-curl -I https://lftpgui.brynley.au    # test full path
+curl -I https://lftpgui.YOUR_DOMAIN   # test full path
 certbot certificates                  # verify cert isn't expired
 
 # SSH key issues
@@ -347,16 +378,16 @@ ssh -v dietpi-user                    # verbose SSH debug
 
 ## Network Configuration Reference
 
-### Router Port Forwards (TP-Link Archer AX10) — already configured for ABS
+### Router Port Forwards
 ```
-Port 80  → 192.168.1.100:80   (HTTP — certbot renewal + redirect to HTTPS)
-Port 443 → 192.168.1.100:443  (HTTPS — nginx serves both abs and lftpgui)
+Port 80  → YOUR_DIETPI_IP:80   (HTTP — certbot renewal + redirect to HTTPS)
+Port 443 → YOUR_DIETPI_IP:443  (HTTPS — nginx serves all virtual hosts)
 ```
 
-### DNS Records at iwantmyname.com
+### DNS Records
 ```
-A  abs      → 115.69.2.169   (AudiobookShelf)
-A  lftpgui  → 115.69.2.169   (LFTP-GUI)
+A  audiobookshelf  → YOUR_PUBLIC_IP
+A  lftpgui         → YOUR_PUBLIC_IP
 ```
 
 ### Security Model
@@ -364,3 +395,28 @@ A  lftpgui  → 115.69.2.169   (LFTP-GUI)
 - All external access goes through nginx on port 443 (HTTPS)
 - No direct port 57423 access from LAN or internet
 - SSH key for seedbox is passwordless (required for background LFTP operations)
+
+---
+
+## Troubleshooting: Antigravity Server "Crash" on DietPi
+
+If Antigravity (VS Code) reports that the server crashed unexpectedly during the "Resolving ssh remote" stage, it is likely due to the initialization script failing to create a lock file.
+
+### Root Cause
+The server script tries to write to `~/.antigravity-server/.installation_lock` before the `.antigravity-server` directory itself exists. This causes a "Bad file descriptor" error in the shell script, which VS Code interprets as a crash.
+
+### Fix
+Manually initialize the environment on the DietPi:
+
+1. **Create the directory and lock file**:
+   ```bash
+   ssh dietpi-root "mkdir -p /home/dietpi/.antigravity-server && touch /home/dietpi/.antigravity-server/.installation_lock && chown -R dietpi:dietpi /home/dietpi/.antigravity-server && chmod 755 /home/dietpi/.antigravity-server && chmod 600 /home/dietpi/.antigravity-server/.installation_lock"
+   ```
+
+2. **Install ARM-specific dependencies**:
+   Some native modules require `libatomic1` on ARM platforms:
+   ```bash
+   ssh dietpi-root "apt-get update && apt-get install -y libatomic1"
+   ```
+
+3. **Restart VS Code** and try connecting again.

@@ -125,4 +125,5 @@ lftp -c "set sftp:connect-program 'ssh -a -x -i ~/.ssh/your_key'; set sftp:auto-
 - **Cloudflare Access with Entra ID (free tier)** — Gate the tunnel behind Cloudflare Access, using Microsoft Entra ID (formerly Azure AD free tier) as the identity provider for SSO login
 
 ### Authentication
+- **HTTP Basic Auth** ✓ — Nginx basic auth gate (`/etc/nginx/.htpasswd`) protects all routes
 - **TOTP / MFA** — Add time-based one-time password support as a second factor, either via Cloudflare Access policies or a lightweight in-app auth layer

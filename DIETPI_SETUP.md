@@ -132,6 +132,10 @@ git clone https://github.com/onelostmuppet/LFTP-GUI.git \
 
 cd /path/to/lftp-gui
 
+# Configure git to trust this directory (required if cloning as root)
+# This prevents "detected dubious ownership" errors when using git later
+git config --global --add safe.directory /path/to/lftp-gui
+
 # Switch to the DietPi branch
 git checkout dietpi
 
@@ -333,6 +337,10 @@ cd /path/to/lftp-gui
 git pull origin dietpi
 systemctl restart lftp-gui
 ```
+
+> **Git ownership error?** If you see `fatal: detected dubious ownership in repository`,
+> run: `git config --global --add safe.directory /path/to/lftp-gui`
+> This happens when the repo was cloned as root but is being accessed as a different user.
 
 ### Nginx
 ```bash

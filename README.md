@@ -75,6 +75,7 @@ REMOTE_ROOT = "/path/to/remote/downloads"
 LOCAL_DIR = "/mnt/c/Users/your_user/Downloads"
 THREADS = 6
 MAX_CONCURRENT_DOWNLOADS = 5
+APP_PORT = 5000
 ```
 
 ---
@@ -107,6 +108,32 @@ lftp -c "set sftp:connect-program 'ssh -a -x -i ~/.ssh/your_key'; set sftp:auto-
 ```bash
 lftp -c "set sftp:connect-program 'ssh -a -x -i ~/.ssh/your_key'; set sftp:auto-confirm yes; set net:timeout 15; set net:max-retries 3; open 'sftp://user@host/remote/path'; mirror --continue --parallel=6 . '/local/downloads/dir'"
 ```
+
+## Troubleshooting
+
+### ImportError: cannot import name 'APP_PORT'
+**Problem**: Service fails with `ImportError: cannot import name 'APP_PORT' from 'config'`
+
+**Cause**: The `config.py` file on your deployment machine is missing the `APP_PORT` variable (typically after pulling updates from git).
+
+**Solution**: Add the missing line to `config.py`:
+```bash
+echo "APP_PORT = 5000" >> /path/to/LFTP-GUI/config.py
+```
+
+Or edit the file manually and add:
+```python
+APP_PORT = 5000
+```
+
+Then restart the service:
+```bash
+systemctl restart lftp-gui  # For DietPi/systemd deployments
+# or
+python3 app.py              # For local WSL/direct execution
+```
+
+---
 
 ## Known Limitations and Future Features
 - **Connection Pooling** — Paramiko currently opens a fresh SSH transport per browse request; pooling would speed up rapid directory navigation

@@ -147,12 +147,12 @@ function renderFileList() {
 
     let html = `
         <div class="file-list-header">
-            <div></div> <!-- Icon col -->
+            <div></div>
             <div onclick="setSort('name')">Name ${getArrow('name')}</div>
-            <div onclick="setSort('ext')">Ext ${getArrow('ext')}</div>
-            <div onclick="setSort('size')">Size ${getArrow('size')}</div>
-            <div onclick="setSort('date')">Modified ${getArrow('date')}</div>
-            <div></div> <!-- Action col -->
+            <div class="col-resizable col-ext" onclick="setSort('ext')">Ext ${getArrow('ext')}<span class="col-resize-handle" data-col="ext"></span></div>
+            <div class="col-resizable col-size" onclick="setSort('size')">Size ${getArrow('size')}<span class="col-resize-handle" data-col="size"></span></div>
+            <div class="col-resizable col-date" onclick="setSort('date')">Modified ${getArrow('date')}<span class="col-resize-handle" data-col="date"></span></div>
+            <div></div>
         </div>
         <ul class="file-list">
     `;
@@ -170,9 +170,9 @@ function renderFileList() {
             <li class="file-item" ${clickAttr}>
                 <span class="file-icon">${icon}</span>
                 <span class="file-name" title="${escapeAttr(entry.name)}">${escapeHtml(entry.name)}</span>
-                <span class="file-size">${escapeHtml(ext)}</span>
-                <span class="file-size">${size}</span>
-                <span class="file-size">${dateStr}</span>
+                <span class="file-size col-ext">${escapeHtml(ext)}</span>
+                <span class="file-size col-size">${size}</span>
+                <span class="file-size col-date">${dateStr}</span>
                 <span class="file-action">
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); enqueue('${escapeAttr(entryPath)}', '${escapeAttr(entry.name)}', ${entry.is_dir})">
                         ⬇ ${entry.is_dir ? 'Mirror' : 'Download'}
@@ -402,6 +402,112 @@ async function fetchLogs() {
     }
 }
 
+// ── Panel Resize ──────────────────────────────────────────────────────────
+
+function initPanelResize() {
+    const handle = document.getElementById('panel-resize-handle');
+    const root = document.documentElement;
+    const STORAGE_KEY = 'queuePanelWidth';
+    const MIN = 250;
+    const MAX = 800;
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) root.style.setProperty('--queue-width', saved + 'px');
+
+    let dragging = false;
+
+    function startDrag(e) {
+        dragging = true;
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    }
+
+    function onDrag(e) {
+        if (!dragging) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const mainRect = handle.parentElement.getBoundingClientRect();
+        const newWidth = Math.min(MAX, Math.max(MIN, mainRect.right - clientX));
+        root.style.setProperty('--queue-width', newWidth + 'px');
+    }
+
+    function stopDrag() {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        const currentWidth = parseInt(getComputedStyle(root).getPropertyValue('--queue-width'), 10);
+        localStorage.setItem(STORAGE_KEY, currentWidth);
+    }
+
+    handle.addEventListener('mousedown', startDrag);
+    handle.addEventListener('touchstart', startDrag, { passive: false });
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+}
+
+// ── Column Resize ─────────────────────────────────────────────────────────
+
+function initColumnResize() {
+    const root = document.documentElement;
+    const COL_VARS = {
+        ext:  { prop: '--col-ext',  storageKey: 'col-ext',  min: 30,  max: 200 },
+        size: { prop: '--col-size', storageKey: 'col-size', min: 40,  max: 200 },
+        date: { prop: '--col-date', storageKey: 'col-date', min: 60,  max: 280 },
+    };
+
+    for (const cfg of Object.values(COL_VARS)) {
+        const saved = localStorage.getItem(cfg.storageKey);
+        if (saved) root.style.setProperty(cfg.prop, saved + 'px');
+    }
+
+    let dragging = false;
+    let activeCol = null;
+    let startX = 0;
+    let startWidth = 0;
+
+    // Event delegation on the static fileListEl container
+    fileListEl.addEventListener('mousedown', (e) => {
+        const handle = e.target.closest('.col-resize-handle');
+        if (!handle) return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        const cfg = COL_VARS[handle.dataset.col];
+        if (!cfg) return;
+
+        dragging = true;
+        activeCol = cfg;
+        startX = e.clientX;
+        startWidth = parseInt(getComputedStyle(root).getPropertyValue(cfg.prop), 10);
+        handle.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!dragging || !activeCol) return;
+        const delta = e.clientX - startX;
+        const newWidth = Math.min(activeCol.max, Math.max(activeCol.min, startWidth + delta));
+        root.style.setProperty(activeCol.prop, newWidth + 'px');
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        const newWidth = parseInt(getComputedStyle(root).getPropertyValue(activeCol.prop), 10);
+        localStorage.setItem(activeCol.storageKey, newWidth);
+        document.querySelectorAll('.col-resize-handle.dragging').forEach(h => h.classList.remove('dragging'));
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        activeCol = null;
+    });
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -413,5 +519,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (_) {}
     browseTo(startPath);
     connectSSE();
+    initPanelResize();
+    initColumnResize();
     clearBtn.addEventListener('click', clearFinished);
 });

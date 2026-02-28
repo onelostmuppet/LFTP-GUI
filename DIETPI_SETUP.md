@@ -314,6 +314,7 @@ In the browser:
 3. Queue a test download and confirm the file lands in the expected NAS folder
 4. Check `journalctl -u lftp-gui` for the mapping log line:
    `Mapped '.../...#tv...' → '/mnt/NAS/tv' (pattern: #?tv)`
+5. **Mobile:** Open on Android Chrome — file list should use a compact 4-column layout, the Download button should be visible without tapping first, and the panel divider should be hidden (panels stack vertically)
 
 Reboot test:
 ```bash

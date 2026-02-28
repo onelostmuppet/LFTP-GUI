@@ -54,6 +54,9 @@ Then open **http://localhost:5000** in your Windows browser.
 - **🔑 Auto Key Detection** — Supports Ed25519, ECDSA, RSA, and DSS key types
 - **↻ Resume** — Partial downloads resume automatically via the `-c` flag
 - **💾 Persistent Cancelled Downloads** — Cancelled downloads are saved to `state.json` and restored on server restart so they can be resumed later
+- **↔ Resizable Panels** — Drag the divider between the file browser and downloads panel to resize; persists across sessions
+- **⇔ Resizable Columns** — Drag the right edge of Ext, Size, and Modified column headers to resize; persists across sessions
+- **📱 Mobile-Responsive** — Optimised for Android Chrome: compact header, 4-column file list, always-visible download buttons, 48px touch targets
 
 All downloads are saved to `/mnt/c/your_user/Downloads` (your Windows Downloads folder).
 
